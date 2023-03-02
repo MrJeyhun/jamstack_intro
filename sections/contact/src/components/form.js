@@ -15,6 +15,8 @@ const reducer = (state, action) => {
             return {...state, [action.field]: action.value}
         case 'updateStatus':
             return {...state, status: action.status}
+        case 'reset':
+            return {...state, }
         default:
             return INITIAL_STATE;
     }
@@ -23,7 +25,10 @@ const reducer = (state, action) => {
 const Form = () => {
     const [state, dispatch] = useReducer(reducer, INITIAL_STATE);
 
-    console.log("state:", state)
+    const setStatus = status => dispatch({
+        type: 'updateStatus',
+        status
+    })
 
     const updateFieldValue = field => event => {
         dispatch({type: 'updateFieldValue', field, value: event.target.value});
@@ -31,10 +36,27 @@ const Form = () => {
 
     const handleSubmit = (event) => {
         event.preventDefault();
+        setStatus('PENDING');
+
+        fetch('api/contact', {
+            method: 'POST',
+            body: JSON.stringify(state)
+        })
+            .then(response => response.json())
+            .then(response => {
+                console.log(response);
+                setStatus('SUCCESS');
+            })
+            .catch(error => {
+                console.error(error);
+                setStatus('ERROR');
+            })
     }
 
     if (state.status === 'SUCCESS') {
-        return <p className={styles.success}>Message sent!</p>
+        return (
+            <p className={styles.success}>Message sent!</p>
+        )
     }
 
     return (
